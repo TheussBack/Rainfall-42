@@ -1,4 +1,4 @@
-# Level2 → Level3
+# Level3
 
 ## Objective
 
@@ -122,3 +122,4 @@ We successfully executed `get_shell()` and obtained a shell as `level3`.
 ---
 
 **End of Level 3 Walkthrough**
+
