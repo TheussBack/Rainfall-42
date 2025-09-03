@@ -57,12 +57,12 @@ Yes, if we make him read a sequence of chosen numbers he will possibly over-writ
 
 We found two functions, `p()` and `n()`.
 * **`p()` uses printf,
-* **`n()` - reads our input,
-      - calls `p()`,
-      - gives a value to m (a global variable empty so far) [0x8049810]
-      - compare m with 0x1025544
-      - if m != jump to an exit
-      - else run `/bin/sh`
+* **`n()` reads our input,
+      calls `p()`, 
+      gives a value to m (a global variable empty so far) [0x8049810], 
+      compare m with 0x1025544, 
+      if m != jump to an exit, 
+      else run `/bin/sh`
 
 The goal here is clear give m the right value to pass the cmp and execute the syscall.
 
@@ -119,6 +119,7 @@ We successfully overwrite `m` and trigger the hidden shell.
 * **Outcome:** gained a shell as `level4` and retrieved the password.
 
 > With this, you can `su level4` using the password.
+
 
 
 
