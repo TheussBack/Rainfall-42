@@ -8,20 +8,20 @@ The goal of Level 6 is to escalate from `level6` to `level7` by exploiting a buf
 
 ## Step 1: Examine the Binary
 
-After switching to `level5`:
+After switching to `level6`:
 
 ```bash
-level5@RainFall:~$ ls
-level5
+level6@RainFall:~$ ls
+level6
 ```
 
 Running the binary with different input lengths:
 
 ```bash
-level5@RainFall:~$ ./level5
+level6@RainFall:~$ ./level6
 Segmentation fault (core dumped)
 
-level5@RainFall:~$ ./level5 aaaaa
+level6@RainFall:~$ ./level6 aaaaa
 nope
 ```
 
@@ -70,14 +70,14 @@ This overwrites the return address with the address of `n()` (0x08048444).
 Running the exploit:
 
 ```bash
-level5@RainFall:~$ ./level5 $(cat /tmp/exploit)
+level6@RainFall:~$ ./level6 $(cat /tmp/exploit)
 123456789abcdef...
 ```
 
 Now we can read:
 
 ```bash
-level5@RainFall:~$ su level6
+level6@RainFall:~$ su level7
 Password: <paste flag>
 level6@RainFall:~$
 ```
@@ -94,3 +94,4 @@ level6@RainFall:~$
 ---
 
 **End of Level 6 Walkthrough**
+
