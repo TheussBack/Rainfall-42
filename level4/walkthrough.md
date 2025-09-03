@@ -111,14 +111,8 @@ We successfully overwrite `m` and trigger the hidden shell.
 
 ---
 
-## Step 8: Summary
+> With this, you can `su level5` using the password.
 
-* **Vulnerability:** format string bug (`printf(user_input)`).
-* **Offset:** writing with `%n` directly to the global variable `m`.
-* **Target:** set `m = 64` to unlock `system("/bin/sh")`.
-* **Outcome:** gained a shell as `level4` and retrieved the password.
-
-> With this, you can `su level4` using the password.
 
 
 
