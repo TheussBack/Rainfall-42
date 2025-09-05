@@ -1,8 +1,8 @@
-# Level3
+# Level2
 
 ## Objective
 
-The goal of Level 3 is to escalate from `level2` to `level3` by exploiting a buffer overflow vulnerability in the `level2` binary. By the end, you should be able to retrieve the password for `level3`.
+The goal of Level 2 is to escalate from `level2` to `level3` by exploiting a buffer overflow vulnerability in the `level2` binary. By the end, you should be able to retrieve the password for `level3`.
 
 ---
 
@@ -111,6 +111,7 @@ We successfully executed `get_shell()` and obtained a shell as `level3`.
 ---
 
 **End of Level 3 Walkthrough**
+
 
 
 
