@@ -1,0 +1,71 @@
+# Bonus1 — Understanding the `nb * 4` Trick
+
+In `bonus1`, the program has this code:
+
+```c
+int nb = atoi(argv[1]);
+...
+memcpy(buffer, argv[2], 4 * nb);
+```
+
+* `nb` is a **signed 32-bit integer**.
+* `memcpy` copies `4 * nb` bytes.
+* Normally, `nb ≤ 9` → `4*nb ≤ 36` bytes.
+* We want to copy **more than 36 bytes**, so we need to manipulate `nb`.
+
+---
+
+## 1. 32-bit Arithmetic Wrap-Around
+
+Signed 32-bit integers range from:
+
+```
+-2,147,483,648  to  2,147,483,647
+```
+
+* Arithmetic beyond this range **wraps modulo 2³²**.
+* Examples:
+
+```
+2147483647 + 1  = -2147483648
+-2147483648 - 1 =  2147483647
+```
+
+So `4 * nb` is computed **mod 2³²**.
+
+---
+
+## 2. The Negative Number Trick
+
+We want `4*nb = 44`.
+
+* Choose a negative number: `nb = -2147483637`.
+* Multiply by 4:
+
+```
+-2147483637 * 4 = -8589934548
+```
+
+* In **32-bit arithmetic**, only the lower 32 bits are kept:
+
+```
+-8589934548 mod 2^32 = 44
+```
+
+The result is exactly 44 bytes.
+
+---
+
+## 3. How It Works in Memory
+
+* `memcpy` sees the wrapped 32-bit value as **unsigned**.
+* Even though `nb` is negative, the wrap-around causes **44 bytes to be copied**.
+* This allows overwriting the 40-byte padding **plus the 4-byte `nb`** → controlling the integer check (`0x574f4c46`).
+
+---
+
+## 4. Summary
+
+* `*4` in 32-bit signed arithmetic wraps **modulo 2³²**.
+* Picking a carefully chosen negative number produces the exact number of bytes needed.
+* This enables the exploit to overwrite memory past the intended buffer.
