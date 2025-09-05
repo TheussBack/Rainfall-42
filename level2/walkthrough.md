@@ -110,7 +110,8 @@ We successfully executed `get_shell()` and obtained a shell as `level3`.
 
 ---
 
-**End of Level 3 Walkthrough**
+**End of Level 2**
+
 
 
 
