@@ -15,6 +15,8 @@ Hello coucou
 
 - Info functions show us a `main()` and a `greetuser()`
 
+Analysing the main by disassembling : 
+
 ```bash
 0x08048548 <+31>:	lea    0x50(%esp),%ebx
 0x0804854c <+35>:	mov    $0x0,%eax
@@ -168,3 +170,4 @@ bonus3
 $ cat /home/user/bonus3/.pass
 71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
 ```
+
