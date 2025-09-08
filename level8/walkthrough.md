@@ -39,6 +39,7 @@ Non-debugging symbols:
 Here we can see that there's two variables and theirs adresses. 
 The printf  prints two pointers `(auth, service)`, both initially `nil`.
 they're read by fgets and stocked in locol memory at 0x20%esp
+
 ---
 
 ## Step 2: Reverse Engineer the Commands
@@ -115,3 +116,4 @@ c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
 ```
 
 **End of Level8 Walkthrough**
+
