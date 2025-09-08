@@ -18,14 +18,14 @@ hello
 (nil), (nil)
 ```
 
-when we use ltrace we can see a printf()
+When we use ltrace we can see a printf()
 ```bash
 printf(%p, %p\n, (nil), (nil)(nil), (nil)) = 14;
 ```
 
 Input is read with `fgets()`.
 
-then we can try to use get variables,
+Then we can try to use info variables,
 
 ```bash
 (gdb) info variables
@@ -116,4 +116,5 @@ c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
 ```
 
 **End of Level8 Walkthrough**
+
 
