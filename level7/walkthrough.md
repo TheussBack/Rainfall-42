@@ -11,18 +11,7 @@ We inspect the binary protections upon connecting:
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
 No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   /home/user/level7/level7
 
-```
-
-This means:
-
--   **No RELRO** → GOT can be overwritten.
-    
--   **No canary** → buffer overflows are possible.
-    
--   **NX disabled** → shellcode injection possible.
-    
--   **No PIE** → binary base address is fixed.
-    
+``` 
 
 ## Step 2 — First Execution Tests
 
@@ -162,5 +151,6 @@ level7@RainFall:~$ su level8
 Password: 5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
 
 ```
+
 
 We now have access to **level8**! 
