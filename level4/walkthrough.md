@@ -31,7 +31,9 @@ The program simply echoes back what we type, but suspiciously uses `printf()` di
 
 ```bash
 level4@RainFall:~$ ltrace ./level4
-printf("test") = 4
+printf("\n"
+)                                     = 1
+
 ```
 
 We see that `printf()` is called **without a format string**, which means our input is treated as the format string itself.
@@ -112,6 +114,7 @@ We successfully overwrite `m` and trigger the hidden shell.
 ---
 
 > With this, you can `su level5` using the password.
+
 
 
 
