@@ -127,7 +127,7 @@ Notes:
 Run the program with the crafted input:
 
 ```bash
-$ ./level5 < /tmp/explo
+$ cat /tmp/explo - | ./level5
 ```
 
 Now the GOT slot for `exit` points to `o`. The next `exit()` from `n` actually calls `o` → `system("/bin/sh")` drops a shell under `level6`.
